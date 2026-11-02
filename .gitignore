@@ -1,0 +1,21 @@
+# Dependencies & Build Artifacts
+.tools/
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.iml
+*.class
+
+# Environment and sensitive keys
+.env
+.env.local
+.env.*.local
+application-local.properties
+

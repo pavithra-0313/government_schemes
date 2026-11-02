@@ -1,0 +1,449 @@
+{
+  "info": {
+    "name": "Student Scholarship & Education Scheme Finder API",
+    "_postman_id": "7f7f615a-8dbc-4e9f-853d-240e26c7dd15",
+    "description": "Production REST API collection for discovering scholarships, evaluating multi-criteria eligibility, tracking application status, managing document checklists, and scheduling deadline reminders.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Register Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kavitha Murugan\",\n  \"email\": \"kavitha@example.com\",\n  \"password\": \"User@123\",\n  \"role\": \"USER\",\n  \"preferredLanguage\": \"ta\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "2. Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@scholarshipfinder.gov.in\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "3. Get Current User Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Profile",
+      "item": [
+        {
+          "name": "1. Save Undergraduate Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"educationLevel\": \"UNDERGRADUATE\",\n  \"currentClassOrYear\": \"First Year\",\n  \"course\": \"B.E Computer Science\",\n  \"stream\": \"Engineering\",\n  \"institutionName\": \"Government College of Technology\",\n  \"institutionType\": \"Government\",\n  \"institutionLocationType\": \"Urban\",\n  \"boardOrUniversity\": \"Anna University\",\n  \"previousExamPercentage\": 88.5,\n  \"entranceExamScore\": 186.0,\n  \"admissionType\": \"Merit\",\n  \"dateOfBirth\": \"2005-08-14\",\n  \"gender\": \"Female\",\n  \"state\": \"Tamil Nadu\",\n  \"district\": \"Chennai\",\n  \"communityCategory\": \"BC\",\n  \"religionMinorityFlag\": false,\n  \"annualFamilyIncome\": 150000,\n  \"disabilityStatus\": false,\n  \"singleGirlChild\": false,\n  \"firstGraduate\": true,\n  \"orphanOrSingleParent\": false,\n  \"hosteller\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile"]
+            }
+          }
+        },
+        {
+          "name": "2. Get Current Student Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["profile", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schemes Catalog",
+      "item": [
+        {
+          "name": "1. List All Schemes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/schemes",
+              "host": ["{{baseUrl}}"],
+              "path": ["schemes"]
+            }
+          }
+        },
+        {
+          "name": "2. Search Schemes with Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/schemes?educationLevel=UNDERGRADUATE&state=Tamil Nadu&benefitType=Scholarship",
+              "host": ["{{baseUrl}}"],
+              "path": ["schemes"],
+              "query": [
+                {
+                  "key": "educationLevel",
+                  "value": "UNDERGRADUATE"
+                },
+                {
+                  "key": "state",
+                  "value": "Tamil Nadu"
+                },
+                {
+                  "key": "benefitType",
+                  "value": "Scholarship"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Get Scheme Details By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/schemes/22",
+              "host": ["{{baseUrl}}"],
+              "path": ["schemes", "22"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eligibility Engine",
+      "item": [
+        {
+          "name": "1. Evaluate My Matches (Logged-in Student)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/eligibility/my-matches",
+              "host": ["{{baseUrl}}"],
+              "path": ["eligibility", "my-matches"]
+            }
+          }
+        },
+        {
+          "name": "2. Ad-hoc Evaluate (School Student Profile)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"educationLevel\": \"SCHOOL_SECONDARY\",\n  \"currentClassOrYear\": \"Class 10\",\n  \"stream\": \"General\",\n  \"institutionType\": \"Government\",\n  \"previousExamPercentage\": 82.0,\n  \"dateOfBirth\": \"2011-03-20\",\n  \"gender\": \"Male\",\n  \"state\": \"Tamil Nadu\",\n  \"communityCategory\": \"SC\",\n  \"annualFamilyIncome\": 120000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/eligibility/evaluate",
+              "host": ["{{baseUrl}}"],
+              "path": ["eligibility", "evaluate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saved Schemes & Application Tracker",
+      "item": [
+        {
+          "name": "1. Get Saved Schemes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saved-schemes",
+              "host": ["{{baseUrl}}"],
+              "path": ["saved-schemes"]
+            }
+          }
+        },
+        {
+          "name": "2. Save Scheme to Tracker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saved-schemes/22",
+              "host": ["{{baseUrl}}"],
+              "path": ["saved-schemes", "22"]
+            }
+          }
+        },
+        {
+          "name": "3. Update Application Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Applied\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/saved-schemes/22/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["saved-schemes", "22", "status"]
+            }
+          }
+        },
+        {
+          "name": "4. Remove Saved Scheme",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saved-schemes/22",
+              "host": ["{{baseUrl}}"],
+              "path": ["saved-schemes", "22"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Document Checklist",
+      "item": [
+        {
+          "name": "1. Get All Checklist Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/checklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["checklist"]
+            }
+          }
+        },
+        {
+          "name": "2. Toggle Document Ready Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isReady\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/checklist/22/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["checklist", "22", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scholarship Calendar",
+      "item": [
+        {
+          "name": "1. Get Deadlines & Renewal Timeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/calendar",
+              "host": ["{{baseUrl}}"],
+              "path": ["calendar"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "1. Trigger Daily 7-Day & Renewal Reminders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reminders/trigger",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "reminders", "trigger"]
+            }
+          }
+        },
+        {
+          "name": "2. Get Master Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "documents"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
