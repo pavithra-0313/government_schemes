@@ -89,6 +89,9 @@ export const Questionnaire = () => {
       // Clean and sanitize numbers and date fields
       const sanitized = {
         ...formData,
+        dateOfBirth: (formData.dateOfBirth && typeof formData.dateOfBirth === 'string' && formData.dateOfBirth.trim())
+          ? formData.dateOfBirth.trim()
+          : null,
         institutionName: effectiveInst,
         annualFamilyIncome: formData.annualFamilyIncome !== '' && formData.annualFamilyIncome !== null ? Number(formData.annualFamilyIncome) : null,
         previousExamPercentage: formData.previousExamPercentage !== '' && formData.previousExamPercentage !== null ? Number(formData.previousExamPercentage) : 0.0,
@@ -104,6 +107,14 @@ export const Questionnaire = () => {
       const res = await api.post('/eligibility/evaluate', sanitized);
       const matchResults = res.data?.data || [];
 
+      // Persist in session storage so page refresh or rerun preserves the matches
+      try {
+        sessionStorage.setItem('last_evaluated_results', JSON.stringify(matchResults));
+        sessionStorage.setItem('last_evaluated_profile', JSON.stringify(sanitized));
+      } catch (storageErr) {
+        console.warn('Could not cache results in sessionStorage:', storageErr);
+      }
+
       // Navigate to results page with state
       navigate('/results', {
         state: {
@@ -112,11 +123,15 @@ export const Questionnaire = () => {
         }
       });
     } catch (err) {
-      console.error('Eligibility error:', err);
+      console.error('Eligibility evaluation error:', err);
       if (!err.response) {
-        setError('Cannot connect to backend server. Please ensure the Spring Boot backend is running on http://localhost:8080');
+        setError('Cannot connect to backend server. Please make sure the backend is running on http://localhost:8080 (Run run_project.bat).');
+      } else if (err.response.status >= 500) {
+        setError('Backend server error or proxy failure (Status ' + err.response.status + '). Ensure the Spring Boot backend is active on port 8080.');
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
-        setError(err.response?.data?.message || 'Error calculating eligibility. Please check your inputs.');
+        setError('Error calculating eligibility. Please check that all required fields are filled correctly.');
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
@@ -298,18 +313,7 @@ export const Questionnaire = () => {
               )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginTop: '24px' }}>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn btn-secondary"
-                title="Discover schemes immediately matching this stream and level"
-              >
-                {loading ? 'Evaluating Rules...' : t('questionnaire.submit')}
-                <Sparkles size={18} />
-              </button>
-
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -419,7 +423,7 @@ export const Questionnaire = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
               <button
                 type="button"
                 onClick={() => setStep(1)}
@@ -429,26 +433,14 @@ export const Questionnaire = () => {
                 {t('questionnaire.back')}
               </button>
 
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="btn btn-secondary"
-                >
-                  {loading ? 'Evaluating Rules...' : t('questionnaire.submit')}
-                  <Sparkles size={18} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className={`btn btn-primary ${isSchool ? 'btn-large' : ''}`}
-                >
-                  {t('questionnaire.next')}
-                  <ArrowRight size={18} />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className={`btn btn-primary ${isSchool ? 'btn-large' : ''}`}
+              >
+                {t('questionnaire.next')}
+                <ArrowRight size={18} />
+              </button>
             </div>
           </div>
         )}

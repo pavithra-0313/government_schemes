@@ -12,27 +12,62 @@ export const Results = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const [results, setResults] = useState(location.state?.results || []);
-  const [profile, setProfile] = useState(location.state?.profile || null);
+  const getInitialResults = () => {
+    if (location.state?.results && location.state.results.length > 0) {
+      return location.state.results;
+    }
+    try {
+      const cached = sessionStorage.getItem('last_evaluated_results');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return [];
+  };
+
+  const getInitialProfile = () => {
+    if (location.state?.profile) return location.state.profile;
+    try {
+      const cached = sessionStorage.getItem('last_evaluated_profile');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return null;
+  };
+
+  const [results, setResults] = useState(getInitialResults);
+  const [profile, setProfile] = useState(getInitialProfile);
   const [filterType, setFilterType] = useState('ALL'); // ALL, HIGH, ELIGIBLE
   const [savedIds, setSavedIds] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  // If page was loaded directly without state, fetch my-matches from API if logged in
+  // If page was loaded directly without results, recover from cached profile or fetch my-matches
   useEffect(() => {
-    if (results.length === 0 && isAuthenticated) {
-      setLoading(true);
-      api.get('/eligibility/my-matches')
-        .then((res) => {
-          if (res.data?.data) {
-            setResults(res.data.data);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+    if (results.length === 0) {
+      if (profile) {
+        setLoading(true);
+        api.post('/eligibility/evaluate', profile)
+          .then((res) => {
+            if (res.data?.data) {
+              setResults(res.data.data);
+              try {
+                sessionStorage.setItem('last_evaluated_results', JSON.stringify(res.data.data));
+              } catch (e) {}
+            }
+          })
+          .catch((err) => console.error('Error re-evaluating cached profile:', err))
+          .finally(() => setLoading(false));
+      } else if (isAuthenticated) {
+        setLoading(true);
+        api.get('/eligibility/my-matches')
+          .then((res) => {
+            if (res.data?.data) {
+              setResults(res.data.data);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setLoading(false));
+      }
     }
-  }, [results.length, isAuthenticated]);
+  }, [results.length, profile, isAuthenticated]);
 
   // Fetch student's existing saved schemes to mark "Already Saved"
   useEffect(() => {
